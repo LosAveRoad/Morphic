@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { Editor } from '@tldraw/tldraw';
-import { ContentBlock, AnchorPoint, Position, Recommendation } from '../types';
+import { ContentBlock, Recommendation } from '../types/content';
+import { AnchorPoint, Position } from '../types/canvas';
 
 interface CanvasState {
   // 画布编辑器
