@@ -74,9 +74,9 @@ export default function TextCard({
     >
       <div className="group relative">
         {/* Text Content */}
-        <div className={`p-4 min-h-[100px] rounded-lg shadow-sm border ${
+        <div className={`p-4 min-h-[100px] rounded-lg border ${
           isSelected ? 'border-indigo-300 bg-indigo-50' : 'border-gray-200 bg-white'
-        }`}>
+        } ${isDragging ? 'shadow-lg' : 'shadow-sm'}`}>
           {isEditing ? (
             <div className="space-y-3">
               <textarea

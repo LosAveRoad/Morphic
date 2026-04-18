@@ -150,9 +150,9 @@ export default function PomodoroTimer({
     >
       <div className="group relative">
         {/* Pomodoro Timer */}
-        <div className={`p-4 rounded-lg shadow-sm border ${
+        <div className={`p-4 rounded-lg border ${
           isSelected ? 'border-red-300 bg-red-50' : 'border-red-200 bg-red-50'
-        }`}>
+        } ${isDragging ? 'shadow-lg' : 'shadow-sm'}`}>
           <div className="flex items-center gap-2 mb-3">
             <span className="text-red-600 font-medium">🍅 Pomodoro Timer</span>
             <span className="text-xs text-gray-600 bg-white px-2 py-1 rounded-full">

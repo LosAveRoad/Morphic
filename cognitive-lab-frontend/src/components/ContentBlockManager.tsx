@@ -3,9 +3,12 @@
 import React, { useCallback, useState } from 'react';
 import { useCanvasStore } from '../store/canvasStore';
 import { ContentBlock, ContentType } from '../types/content';
-import { Position } from '../types';
+import { Position } from '../types/canvas';
 import TextCard from './blocks/TextCard';
 import PomodoroTimer from './blocks/PomodoroTimer';
+import MathModel from './blocks/MathModel';
+import AlgorithmVisualizer from './blocks/AlgorithmVisualizer';
+import ConceptCard from './blocks/ConceptCard';
 
 interface ContentBlockManagerProps {
   editor: any;
@@ -45,63 +48,44 @@ const renderContentByType = (block: ContentBlock, isSelected: boolean, onSelect:
 
     case 'math':
       return (
-        <div className="p-4 bg-purple-50 rounded-lg shadow-sm border border-purple-200">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-purple-600 font-medium">🧮 Math Problem</span>
-          </div>
-          <div className="bg-white rounded p-3 text-sm">
-            <div className="text-gray-900 mb-2">Solve for x: 2x + 5 = 13</div>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                placeholder="Your answer..."
-                className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
-              />
-              <button className="px-3 py-1 bg-purple-500 text-white rounded text-sm hover:bg-purple-600 transition-colors">
-                Submit
-              </button>
-            </div>
-          </div>
-        </div>
+        <MathModel
+          block={block}
+          isSelected={isSelected}
+          onSelect={onSelect}
+          onDeselect={onDeselect}
+          onDelete={onDelete}
+          onRegenerate={onRegenerate}
+          onUpdatePosition={onUpdatePosition}
+          isDragging={isDragging}
+        />
       );
 
     case 'algorithm':
       return (
-        <div className="p-4 bg-green-50 rounded-lg shadow-sm border border-green-200">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-green-600 font-medium">⚙️ Algorithm</span>
-          </div>
-          <div className="bg-white rounded p-3 text-sm">
-            <div className="text-gray-900 mb-2">Bubble Sort</div>
-            <pre className="text-xs text-gray-700 bg-gray-50 p-2 rounded">
-              {`for i = 0 to n-1
-  for j = 0 to n-i-2
-    if arr[j] > arr[j+1]
-      swap(arr[j], arr[j+1])`}
-            </pre>
-            <button className="mt-2 px-3 py-1 bg-green-500 text-white rounded text-sm hover:bg-green-600 transition-colors">
-              Run
-            </button>
-          </div>
-        </div>
+        <AlgorithmVisualizer
+          block={block}
+          isSelected={isSelected}
+          onSelect={onSelect}
+          onDeselect={onDeselect}
+          onDelete={onDelete}
+          onRegenerate={onRegenerate}
+          onUpdatePosition={onUpdatePosition}
+          isDragging={isDragging}
+        />
       );
 
     case 'concept':
       return (
-        <div className="p-4 bg-yellow-50 rounded-lg shadow-sm border border-yellow-200">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-yellow-600 font-medium">💡 Concept</span>
-          </div>
-          <div className="bg-white rounded p-3 text-sm">
-            <div className="text-gray-900 mb-2">Machine Learning</div>
-            <div className="text-gray-700 text-xs leading-relaxed">
-              A subset of AI that enables systems to learn and improve from experience without being explicitly programmed.
-            </div>
-            <button className="mt-2 px-3 py-1 bg-yellow-500 text-white rounded text-sm hover:bg-yellow-600 transition-colors">
-              Learn More
-            </button>
-          </div>
-        </div>
+        <ConceptCard
+          block={block}
+          isSelected={isSelected}
+          onSelect={onSelect}
+          onDeselect={onDeselect}
+          onDelete={onDelete}
+          onRegenerate={onRegenerate}
+          onUpdatePosition={onUpdatePosition}
+          isDragging={isDragging}
+        />
       );
 
     default:
@@ -222,13 +206,14 @@ export default function ContentBlockManager({ editor }: ContentBlockManagerProps
         return (
           <div
             key={block.id}
-            className={`absolute transition-transform duration-200 ${
+            className={`absolute transition-all duration-200 ${
               isSelected ? 'z-50 ring-2 ring-indigo-500' : 'z-40'
-            }`}
+            } ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
             style={{
               left: block.position.x,
               top: block.position.y,
               transform: isSelected ? 'scale(1.02)' : 'scale(1)',
+              transition: isDragging ? 'none' : 'all 0.2s ease',
             }}
             onClick={(e) => handleBlockClick(e, block.id)}
             onMouseDown={(e) => handleBlockMouseDown(e, block.id)}
@@ -245,26 +230,7 @@ export default function ContentBlockManager({ editor }: ContentBlockManagerProps
                 isDragging
               )}
 
-              {/* Action buttons - only for components that don't have their own */}
-              {isSelected && (block.type !== 'text' && block.type !== 'pomodoro') && (
-                <div className="absolute -top-2 -right-2 flex gap-1">
-                  <button
-                    onClick={(e) => handleRegenerateBlock(e, block.id)}
-                    className="w-6 h-6 bg-indigo-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-indigo-600 transition-colors shadow-md"
-                    title="Regenerate"
-                  >
-                    ↻
-                  </button>
-                  <button
-                    onClick={(e) => handleDeleteBlock(e, block.id)}
-                    className="w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-600 transition-colors shadow-md"
-                    title="Delete"
-                  >
-                    ×
-                  </button>
-                </div>
-              )}
-            </div>
+              </div>
           </div>
         );
       })}

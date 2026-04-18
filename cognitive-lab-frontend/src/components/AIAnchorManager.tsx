@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useCanvasStore } from '../store/canvasStore';
 import { apiClient } from '../lib/api';
-import { Position } from '../types';
+import { Position } from '../types/canvas';
 
 interface AIAnchorManagerProps {
   editor: any;

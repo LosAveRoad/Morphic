@@ -3,7 +3,7 @@
 import { useState, useCallback } from 'react';
 import { useCanvasStore } from '../store/canvasStore';
 import { Recommendation, ContentType } from '../types/content';
-import { Position } from '../types';
+import { Position } from '../types/canvas';
 
 const contentTypeConfig = {
   text: { icon: '📝', label: 'Text', color: 'bg-blue-100 text-blue-800' },

@@ -32,7 +32,6 @@ export default function CanvasContainer() {
       <Tldraw
         onMount={handleMount}
         persistenceKey="cognitive-lab-canvas"
-        shareZone={false}
       >
         {/* 顶部工具栏 */}
         <div className="absolute top-4 left-4 z-10 bg-white/80 backdrop-blur-sm p-3 rounded-lg shadow-sm border border-gray-200">
