@@ -12,6 +12,7 @@ import { errorHandler, notFoundHandler } from './api/middleware/error-handler';
 import { createRecommendationRoutes } from './api/routes/recommend-options';
 import { createContentRoutes } from './api/routes/generate-content';
 import { createAuthRoutes } from './api/routes/auth';
+import { createOcrRoutes } from './api/routes/ocr';
 
 class App {
   public app: Application;
@@ -102,6 +103,7 @@ class App {
     this.app.use('/api/auth', createAuthRoutes(finalAuthController));
     this.app.use('/api/recommendations', createRecommendationRoutes(recommendController, this.sessionManager));
     this.app.use('/api/content', createContentRoutes(contentController, this.sessionManager));
+    this.app.use('/api/ocr', createOcrRoutes());
 
     // API info endpoint
     this.app.get('/api', (req, res) => {
