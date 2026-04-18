@@ -10,7 +10,6 @@ import { RecommendationPanel } from '@/components/ai/recommendation-panel'
 import { CardLayer } from '@/components/cards/card-layer'
 import { loadCards } from '@/domains/persistence/card-storage'
 import { getRealRecommendations, generateRealCardSet } from '@/lib/real/ai-provider'
-import { redoMockCard } from '@/lib/mock/ai-provider'
 import { createCardStore } from '@/stores/card-store'
 import { useUiStore } from '@/stores/ui-store'
 import type { Recommendation } from '@/types/ai'
@@ -68,7 +67,18 @@ const AnchorTracker = track(function AnchorTracker() {
 
 export function TldrawBoard() {
   const cards = useStore(cardStore, useShallow((state) => state.cards))
-  const { anchor, panelOpen, prompt, setAnchor, setPanelOpen, setPrompt, setGenerating } = useUiStore()
+  const { 
+    anchor, 
+    panelOpen, 
+    prompt, 
+    generating,
+    loadingRecommendations,
+    setAnchor, 
+    setPanelOpen, 
+    setPrompt, 
+    setGenerating,
+    setLoadingRecommendations 
+  } = useUiStore()
   const [recommendations, setRecommendations] = useState<Recommendation[]>([])
   const selectedVariant = useRef<string>('explain')
   const visibleAnchor = anchor ?? { x: 56, y: 56 }
@@ -83,24 +93,33 @@ export function TldrawBoard() {
 
   useEffect(() => {
     if (panelOpen && editorRef.current) {
-      getRealRecommendations(editorRef.current, prompt).then(setRecommendations)
+      setLoadingRecommendations(true)
+      const timer = setTimeout(() => {
+        getRealRecommendations(editorRef.current!, prompt)
+          .then(setRecommendations)
+          .finally(() => setLoadingRecommendations(false))
+      }, 500) // Debounce 500ms
+      return () => clearTimeout(timer)
     }
-  }, [prompt, panelOpen])
+  }, [prompt, panelOpen, setLoadingRecommendations])
 
   const generate = async () => {
     if (!editorRef.current) return
     const targetAnchor = anchor ?? visibleAnchor
     setGenerating(true)
-    const result = await generateRealCardSet(editorRef.current, {
-      prompt: prompt || '请解释当前想法',
-      x: targetAnchor.x + 40,
-      y: targetAnchor.y + 40,
-      initialVariant: selectedVariant.current,
-    })
-    cardStore.getState().addCards(result.cards)
-    setPanelOpen(false)
-    setPrompt('')
-    setGenerating(false)
+    try {
+      const result = await generateRealCardSet(editorRef.current, {
+        prompt: prompt || '请解释当前想法',
+        x: targetAnchor.x + 40,
+        y: targetAnchor.y + 40,
+        initialVariant: selectedVariant.current,
+      })
+      cardStore.getState().addCards(result.cards)
+      setPanelOpen(false)
+      setPrompt('')
+    } finally {
+      setGenerating(false)
+    }
   }
 
   return (
@@ -122,7 +141,8 @@ export function TldrawBoard() {
         onRedo={(id) => {
           const card = cards.find((item) => item.id === id)
           if (!card) return
-          cardStore.getState().replaceCard(id, redoMockCard(card))
+          // TODO: Implement real redo logic here using generateRealCardSet
+          console.log('Redo requested for card:', card.id)
         }}
         onMove={(id, x, y) => {
           cardStore.getState().moveCard(id, x, y)
@@ -132,6 +152,7 @@ export function TldrawBoard() {
       <AIAnchor
         x={visibleAnchor.x}
         y={visibleAnchor.y}
+        loading={loadingRecommendations}
         onClick={() => {
           setAnchor(visibleAnchor)
           setPanelOpen(!panelOpen)
@@ -142,6 +163,8 @@ export function TldrawBoard() {
           <RecommendationPanel
             recommendations={recommendations}
             prompt={prompt}
+            loadingRecommendations={loadingRecommendations}
+            generating={generating}
             onPromptChange={setPrompt}
             onSelect={(id) => {
               selectedVariant.current = id

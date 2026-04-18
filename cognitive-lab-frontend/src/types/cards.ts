@@ -1,4 +1,4 @@
-export type CardType = 'text' | 'outline' | 'hybrid'
+export type CardType = 'text' | 'outline' | 'hybrid' | 'html'
 
 export type CanvasCard = {
   id: string
