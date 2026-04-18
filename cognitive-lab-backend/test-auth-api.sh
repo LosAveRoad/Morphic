@@ -4,6 +4,8 @@
 # Manual testing script for authentication API
 
 BASE_URL="http://localhost:3000"
+TIMESTAMP=$(date +%s)
+TEST_EMAIL="test_${TIMESTAMP}@example.com"
 
 echo "🧪 Testing Authentication API"
 echo "================================"
@@ -12,11 +14,11 @@ echo "================================"
 echo -e "\n1. Testing user registration..."
 REGISTER_RESPONSE=$(curl -s -X POST "$BASE_URL/api/auth/register" \
   -H "Content-Type: application/json" \
-  -d '{
-    "email": "test@example.com",
-    "password": "password123",
-    "username": "testuser"
-  }')
+  -d "{
+    \"email\": \"$TEST_EMAIL\",
+    \"password\": \"password123\",
+    \"username\": \"testuser_${TIMESTAMP}\"
+  }")
 
 echo "Response: $REGISTER_RESPONSE"
 TOKEN=$(echo $REGISTER_RESPONSE | grep -o '"token":"[^"]*' | cut -d'"' -f4)
@@ -33,10 +35,10 @@ echo "Token: $TOKEN"
 echo -e "\n2. Testing user login..."
 LOGIN_RESPONSE=$(curl -s -X POST "$BASE_URL/api/auth/login" \
   -H "Content-Type: application/json" \
-  -d '{
-    "email": "test@example.com",
-    "password": "password123"
-  }')
+  -d "{
+    \"email\": \"$TEST_EMAIL\",
+    \"password\": \"password123\"
+  }")
 
 echo "Response: $LOGIN_RESPONSE"
 
@@ -54,7 +56,7 @@ ME_RESPONSE=$(curl -s -X GET "$BASE_URL/api/auth/me" \
 
 echo "Response: $ME_RESPONSE"
 
-if echo "$ME_RESPONSE" | grep -q '"email":"test@example.com"'; then
+if echo "$ME_RESPONSE" | grep -q "\"email\":\"$TEST_EMAIL\""; then
   echo "✅ Get current user successful"
 else
   echo "❌ Get current user failed"
@@ -93,10 +95,10 @@ fi
 echo -e "\n6. Testing duplicate email registration..."
 DUPLICATE_RESPONSE=$(curl -s -X POST "$BASE_URL/api/auth/register" \
   -H "Content-Type: application/json" \
-  -d '{
-    "email": "test@example.com",
-    "password": "different123"
-  }')
+  -d "{
+    \"email\": \"$TEST_EMAIL\",
+    \"password\": \"different123\"
+  }")
 
 echo "Response: $DUPLICATE_RESPONSE"
 
@@ -111,10 +113,10 @@ fi
 echo -e "\n7. Testing login with wrong password..."
 WRONG_PASS_RESPONSE=$(curl -s -X POST "$BASE_URL/api/auth/login" \
   -H "Content-Type: application/json" \
-  -d '{
-    "email": "test@example.com",
-    "password": "wrongpassword"
-  }')
+  -d "{
+    \"email\": \"$TEST_EMAIL\",
+    \"password\": \"wrongpassword\"
+  }")
 
 echo "Response: $WRONG_PASS_RESPONSE"
 

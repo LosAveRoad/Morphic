@@ -40,8 +40,8 @@ export const authenticate = async (
     next();
   } catch (error) {
     if (error instanceof UnauthorizedError) {
-      throw error;
+      return next(error);
     }
-    throw new UnauthorizedError('Invalid or expired token');
+    return next(new UnauthorizedError('Invalid or expired token'));
   }
 };
