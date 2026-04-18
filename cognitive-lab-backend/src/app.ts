@@ -5,6 +5,7 @@ import { RecommendController } from './api/controllers/recommend-controller';
 import { ContentController } from './api/controllers/content-controller';
 import { AuthController } from './api/controllers/auth-controller';
 import { SessionManager } from './services/session-manager';
+import { AuthService } from './services/auth-service';
 import { PrismaClient } from '@prisma/client';
 import { logger } from './utils/logger';
 import { errorHandler, notFoundHandler } from './api/middleware/error-handler';
@@ -96,7 +97,8 @@ class App {
 
     // API routes
     // Create auth controller if not provided
-    const finalAuthController = authController || new AuthController(this.prisma);
+    const authService = new AuthService(this.prisma);
+    const finalAuthController = authController || new AuthController(authService);
     this.app.use('/api/auth', createAuthRoutes(finalAuthController));
     this.app.use('/api/recommendations', createRecommendationRoutes(recommendController, this.sessionManager));
     this.app.use('/api/content', createContentRoutes(contentController, this.sessionManager));
