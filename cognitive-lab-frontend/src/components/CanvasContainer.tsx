@@ -3,6 +3,9 @@
 import { useRef, useEffect } from 'react';
 import { Tldraw } from '@tldraw/tldraw';
 import { useCanvasStore } from '../store/canvasStore';
+import AIAnchorManager from './AIAnchorManager';
+import RecommendationPanel from './RecommendationPanel';
+import ContentBlockManager from './ContentBlockManager';
 
 export default function CanvasContainer() {
   const editorRef = useRef<any>(null);
@@ -36,6 +39,15 @@ export default function CanvasContainer() {
           <h3 className="text-sm font-semibold text-gray-900">Cognitive Lab</h3>
           <p className="text-xs text-gray-600">Click canvas to add AI content</p>
         </div>
+
+        {/* AI Anchor Manager */}
+        <AIAnchorManager editor={editorRef.current} />
+
+        {/* Recommendation Panel */}
+        <RecommendationPanel />
+
+        {/* Content Block Manager */}
+        <ContentBlockManager editor={editorRef.current} />
       </Tldraw>
     </div>
   );

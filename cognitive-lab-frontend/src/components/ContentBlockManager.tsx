@@ -4,35 +4,43 @@ import React, { useCallback, useState } from 'react';
 import { useCanvasStore } from '../store/canvasStore';
 import { ContentBlock, ContentType } from '../types/content';
 import { Position } from '../types';
+import TextCard from './blocks/TextCard';
+import PomodoroTimer from './blocks/PomodoroTimer';
 
 interface ContentBlockManagerProps {
   editor: any;
 }
 
-const renderContentByType = (block: ContentBlock) => {
-  const { type, content } = block;
+const renderContentByType = (block: ContentBlock, isSelected: boolean, onSelect: () => void, onDeselect: () => void, onDelete: () => void, onRegenerate: () => void, onUpdatePosition: (position: { x: number; y: number }) => void, isDragging: boolean) => {
+  const { type } = block;
 
   switch (type) {
     case 'text':
       return (
-        <div className="p-4 min-h-[100px] bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="text-gray-900 leading-relaxed">{content}</div>
-        </div>
+        <TextCard
+          block={block}
+          isSelected={isSelected}
+          onSelect={onSelect}
+          onDeselect={onDeselect}
+          onDelete={onDelete}
+          onRegenerate={onRegenerate}
+          onUpdatePosition={onUpdatePosition}
+          isDragging={isDragging}
+        />
       );
 
     case 'pomodoro':
       return (
-        <div className="p-4 bg-red-50 rounded-lg shadow-sm border border-red-200">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-red-600 font-medium">🍅 Pomodoro Timer</span>
-          </div>
-          <div className="bg-white rounded p-2 text-center">
-            <div className="text-sm text-gray-600">25:00</div>
-            <button className="mt-2 px-3 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600 transition-colors">
-              Start
-            </button>
-          </div>
-        </div>
+        <PomodoroTimer
+          block={block}
+          isSelected={isSelected}
+          onSelect={onSelect}
+          onDeselect={onDeselect}
+          onDelete={onDelete}
+          onRegenerate={onRegenerate}
+          onUpdatePosition={onUpdatePosition}
+          isDragging={isDragging}
+        />
       );
 
     case 'math':
@@ -187,6 +195,10 @@ export default function ContentBlockManager({ editor }: ContentBlockManagerProps
     }
   }, [contentBlocks, updateContentBlock]);
 
+  const handleUpdatePosition = useCallback((blockId: string, position: { x: number; y: number }) => {
+    updateContentBlock(blockId, { position });
+  }, [updateContentBlock]);
+
   // Event listeners for drag and drop
   React.useEffect(() => {
     if (isDragging) {
@@ -204,45 +216,58 @@ export default function ContentBlockManager({ editor }: ContentBlockManagerProps
 
   return (
     <>
-      {contentBlocks.map((block) => (
-        <div
-          key={block.id}
-          className={`absolute transition-transform duration-200 ${
-            selectedBlockId === block.id ? 'z-50 ring-2 ring-indigo-500' : 'z-40'
-          }`}
-          style={{
-            left: block.position.x,
-            top: block.position.y,
-            transform: selectedBlockId === block.id ? 'scale(1.02)' : 'scale(1)',
-          }}
-          onClick={(e) => handleBlockClick(e, block.id)}
-          onMouseDown={(e) => handleBlockMouseDown(e, block.id)}
-        >
-          <div className="group relative">
-            {renderContentByType(block)}
+      {contentBlocks.map((block) => {
+        const isSelected = selectedBlockId === block.id;
 
-            {/* Action buttons */}
-            {selectedBlockId === block.id && (
-              <div className="absolute -top-2 -right-2 flex gap-1">
-                <button
-                  onClick={(e) => handleRegenerateBlock(e, block.id)}
-                  className="w-6 h-6 bg-indigo-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-indigo-600 transition-colors shadow-md"
-                  title="Regenerate"
-                >
-                  ↻
-                </button>
-                <button
-                  onClick={(e) => handleDeleteBlock(e, block.id)}
-                  className="w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-600 transition-colors shadow-md"
-                  title="Delete"
-                >
-                  ×
-                </button>
-              </div>
-            )}
+        return (
+          <div
+            key={block.id}
+            className={`absolute transition-transform duration-200 ${
+              isSelected ? 'z-50 ring-2 ring-indigo-500' : 'z-40'
+            }`}
+            style={{
+              left: block.position.x,
+              top: block.position.y,
+              transform: isSelected ? 'scale(1.02)' : 'scale(1)',
+            }}
+            onClick={(e) => handleBlockClick(e, block.id)}
+            onMouseDown={(e) => handleBlockMouseDown(e, block.id)}
+          >
+            <div className="group relative">
+              {renderContentByType(
+                block,
+                isSelected,
+                () => selectBlock(block.id),
+                () => selectBlock(null),
+                () => handleDeleteBlock({ stopPropagation: () => {} } as React.MouseEvent, block.id),
+                () => handleRegenerateBlock({ stopPropagation: () => {} } as React.MouseEvent, block.id),
+                (position) => handleUpdatePosition(block.id, position),
+                isDragging
+              )}
+
+              {/* Action buttons - only for components that don't have their own */}
+              {isSelected && (block.type !== 'text' && block.type !== 'pomodoro') && (
+                <div className="absolute -top-2 -right-2 flex gap-1">
+                  <button
+                    onClick={(e) => handleRegenerateBlock(e, block.id)}
+                    className="w-6 h-6 bg-indigo-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-indigo-600 transition-colors shadow-md"
+                    title="Regenerate"
+                  >
+                    ↻
+                  </button>
+                  <button
+                    onClick={(e) => handleDeleteBlock(e, block.id)}
+                    className="w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-600 transition-colors shadow-md"
+                    title="Delete"
+                  >
+                    ×
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </>
   );
 }
