@@ -1,245 +1,245 @@
-# Cognitive Lab Frontend Architecture Redesign Spec
+# Cognitive Lab 前端架构重构规格
 
-**Date**: 2026-04-18
-**Author**: GPT-5.4
-**Status**: Draft for review
-**Target Document**: `docs/frontend-architecture.md`
+**日期**: 2026-04-18
+**作者**: GPT-5.4
+**状态**: 待审阅
+**目标文档**: `docs/frontend-architecture.md`
 
-## 1. Goal
+## 1. 目标
 
-Rewrite `docs/frontend-architecture.md` into a front-end architecture and boundary spec that:
+将 `docs/frontend-architecture.md` 重写为一份以前端架构与职责边界为核心的规格文档，满足以下目标：
 
-- preserves the current product direction of immersive canvas + iPad PWA
-- aligns front-end interaction flow with `docs/api-reference.md`
-- clarifies front-end responsibilities without changing backend behavior
-- promotes product-defining UX from `main.md` into the architecture narrative
+- 保留当前产品方向：沉浸式无限画布 + iPad PWA
+- 让前端交互流程与 `docs/api-reference.md` 保持一致
+- 在不修改后端行为的前提下，明确前端职责
+- 将 `main.md` 中真正定义产品气质的体验要求提升到架构层叙述中
 
-## 2. Non-Goals
+## 2. 非目标
 
-This work does not:
+本次工作不包含以下内容：
 
-- change backend APIs or backend implementation
-- define AI model strategy, prompt logic, or ranking logic
-- commit to a production-ready component library implementation
-- fully specify later-phase features such as Douyin MCP integration
+- 不修改后端 API 和后端实现
+- 不定义 AI 模型策略、提示词逻辑或推荐排序逻辑
+- 不承诺具体的生产级组件库实现细节
+- 不完整展开后续阶段能力，例如抖音 MCP 接入
 
-## 3. Product Context
+## 3. 产品上下文
 
-The MVP is not a generic canvas app. Its core experience is:
+当前 MVP 不是一个通用画布应用，它的核心体验是：
 
-- an immersive, paper-like infinite canvas for iPad and desktop web
-- minimal chrome, with canvas-first interaction
-- AI entry through lightweight contextual anchors rather than a traditional chat-first UI
-- generated content that can appear as text, controlled cards, or hybrid learning blocks
-- redo behavior that feels like a meaningful "collapse and reconstruct" interaction
+- 面向 iPad 和桌面 Web 的沉浸式纸张感无限画布
+- 极简界面，优先保证画布优先而不是面板优先
+- AI 通过轻量级上下文锚点进入，而不是传统聊天框优先
+- 生成结果既可以是文本，也可以是受控卡片或混合学习组件
+- redo 操作要体现出“坍缩并重构”的交互感受
 
-The rewritten front-end architecture must reflect these product priorities instead of reading as a generic stack inventory.
+因此，重写后的前端架构文档不能再停留在“技术栈介绍”，而必须体现上述产品优先级。
 
-## 4. Front-End Responsibility Boundaries
+## 4. 前端职责边界
 
-The front end is divided into five domains.
+前端按五个领域拆分，每个领域只负责一类能力。
 
 ### 4.1 Canvas Surface
 
-Responsible for:
+负责：
 
-- rendering the tldraw canvas
-- handling viewport, drawing, selection, and Apple Pencil input
-- collecting nearby canvas context for downstream AI requests
-- presenting the immersive visual shell
+- 渲染 `tldraw` 画布
+- 处理视口、绘制、选区和 Apple Pencil 输入
+- 为后续 AI 请求提取附近画布上下文
+- 呈现沉浸式视觉外壳
 
-Not responsible for:
+不负责：
 
-- deciding AI recommendations
-- owning AI session lifecycle
-- directly rendering backend HTML payloads without a renderer boundary
+- 决定 AI 推荐逻辑
+- 持有 AI 会话生命周期
+- 在没有渲染边界的情况下直接渲染后端 HTML 载荷
 
 ### 4.2 AI Interaction Flow
 
-Responsible for:
+负责：
 
-- driving the user-facing AI state machine
-- calling `POST /recommend-options`
-- calling `POST /generate-content`
-- coordinating anchor reveal, option presentation, direct input, and redo/morphing transitions
+- 驱动用户可见的 AI 状态机
+- 调用 `POST /recommend-options`
+- 调用 `POST /generate-content`
+- 协调锚点浮现、选项展示、直接输入和 redo/morphing 过渡
 
-Not responsible for:
+不负责：
 
-- raw canvas persistence
-- rendering strategy for generated payload internals
-- backend-specific inference policy
+- 原始画布持久化
+- 生成内容内部结构的渲染策略
+- 后端推理策略
 
 ### 4.3 Generated Content Renderer
 
-Responsible for:
+负责：
 
-- rendering returned `text`, `html`, and `hybrid` content safely
-- mapping returned content into front-end presentation containers
-- separating plain text blocks from controlled interactive cards
+- 安全渲染返回的 `text`、`html` 和 `hybrid` 内容
+- 将返回内容映射为前端展示容器
+- 区分纯文本块与受控交互卡片
 
-Not responsible for:
+不负责：
 
-- initiating AI requests
-- deciding recommendation flow
-- storing authentication or session state
+- 发起 AI 请求
+- 决定推荐流程
+- 存储认证状态或会话状态
 
 ### 4.4 Session and Persistence
 
-Responsible for:
+负责：
 
-- front-end session state such as `sessionId`, option popup visibility, and last AI interaction context
-- local recovery and draft protection
-- debounced canvas save orchestration
+- 管理前端会话态，例如 `sessionId`、选项弹层显示状态、最近一次 AI 交互上下文
+- 提供本地恢复和草稿保护
+- 编排防抖画布保存流程
 
-Not responsible for:
+不负责：
 
-- replacing backend persistence as the system of record
-- embedding business meaning into storage keys or cache behavior
+- 取代后端持久化成为系统唯一真相
+- 把业务语义硬编码到存储 key 或缓存策略里
 
 ### 4.5 API Integration Boundary
 
-Responsible for:
+负责：
 
-- mapping front-end view models to backend request/response contracts
-- centralizing auth header and error translation rules
-- protecting the UI from leaking transport details everywhere
+- 将前端视图模型映射到后端请求与响应契约
+- 集中处理认证头和错误转译规则
+- 避免 UI 到处泄漏传输层细节
 
-Not responsible for:
+不负责：
 
-- inventing new backend fields
-- coupling all front-end logic into one global API client abstraction
+- 发明新的后端字段
+- 把所有前端逻辑都耦合进一个全局超级 `ApiClient`
 
-## 5. Canonical User Flow
+## 5. 标准用户流程
 
-The canonical MVP AI flow is:
+MVP 的标准 AI 流程定义为：
 
 `idle -> sensing -> options-ready -> generating -> rendered -> morphing-redo`
 
-Detailed behavior:
+具体行为如下：
 
-1. User draws or focuses within the canvas.
-2. A contextual AI anchor becomes available.
-3. Front end extracts `canvasContext` and calls `POST /recommend-options`.
-4. Backend returns `sessionId` and recommendation options.
-5. User either selects a recommended option or enters direct input.
-6. Front end calls `POST /generate-content` with the same `sessionId`.
-7. Response is handed to the generated content renderer.
-8. Rendered content is persisted into the canvas document via the canvas save flow.
+1. 用户在画布中书写、停留或聚焦某一区域。
+2. 上下文 AI 锚点变得可用。
+3. 前端提取 `canvasContext` 并调用 `POST /recommend-options`。
+4. 后端返回 `sessionId` 和推荐选项。
+5. 用户选择推荐项，或直接输入自己的需求。
+6. 前端使用同一个 `sessionId` 调用 `POST /generate-content`。
+7. 返回结果交由内容渲染层处理。
+8. 渲染后的结果通过画布保存链路写回画布文档。
 
-No front-end design section should describe a legacy single-step `/generate` flow as the primary interaction path.
+重写后的前端文档不得再将单步 `/generate` 流程描述为主路径。
 
-## 6. API Alignment Rules
+## 6. API 对齐规则
 
-The rewritten front-end document must align with `docs/api-reference.md` using the following rules:
+重写后的前端文档必须按以下规则与 `docs/api-reference.md` 对齐：
 
-- the primary AI entrypoint is `POST /recommend-options`
-- the primary content generation endpoint is `POST /generate-content`
-- `sessionId` is treated as an AI interaction artifact, not a canvas identity
-- generated content types are limited to the documented contract: `text`, `html`, `hybrid`
-- front end may define local adapters, but may not describe undocumented request or response fields as required
+- AI 推荐入口以 `POST /recommend-options` 为准
+- 内容生成入口以 `POST /generate-content` 为准
+- `sessionId` 是 AI 交互过程产物，不是画布身份标识
+- 生成内容类型限定在文档已定义的 `text`、`html`、`hybrid`
+- 前端可以定义本地适配层，但不能将未在后端文档出现的字段写成必需契约
 
-The architecture doc may mention legacy generation hooks only as deprecated background, not as the recommended design.
+如果需要提到旧的生成 Hook，只能作为历史背景或待迁移说明，不能再作为推荐设计。
 
-## 7. Rendering Boundary Rules
+## 7. 渲染边界规则
 
-Generated payloads must be described through controlled rendering levels:
+生成结果必须通过受控渲染层表达，按以下三级容器划分：
 
 - `Inline Text Block`
-  - for markdown-like explanation, notes, or summaries
+  - 用于 Markdown 风格解释、笔记、总结
 - `Structured Card`
-  - for bounded formatted output with layout and visual hierarchy
+  - 用于带结构化布局和视觉层次的输出
 - `Interactive Card`
-  - for controlled HTML or hybrid payloads with declared interactivity
+  - 用于受控 HTML 或混合内容的交互卡片
 
-The document must explicitly avoid "render any backend HTML directly into the page" as a default pattern.
+文档必须明确反对“后端给什么 HTML 就直接插入页面”这种默认模式。
 
-Required constraints for `html` and `hybrid` rendering:
+对于 `html` 和 `hybrid` 内容，至少要满足以下约束：
 
-- no script execution
-- no uncontrolled global style injection
-- no implicit event handler execution from raw payload content
-- interactivity must be wrapped in front-end controlled containers
+- 不执行脚本
+- 不允许无控制的全局样式注入
+- 不允许原始内容直接携带隐式事件处理器
+- 所有交互都必须包裹在前端受控容器中
 
-## 8. Persistence Boundary Rules
+## 8. 持久化边界规则
 
-The document must distinguish three storage concerns.
+文档必须明确区分三种存储关注点。
 
-### 8.1 Canvas Persistence
+### 8.1 画布持久化
 
-- stores canvas elements, card placement, and user-visible final artifacts
-- synchronizes with backend canvas APIs
-- acts as the persistent document layer
+- 存储画布元素、卡片位置和用户可见的最终产物
+- 与后端画布 API 同步
+- 作为持久文档层存在
 
-### 8.2 AI Session State
+### 8.2 AI 会话状态
 
-- stores `sessionId`, current options, and redo-related ephemeral context
-- remains separate from canvas entity persistence
-- may be reset without destroying the canvas document
+- 存储 `sessionId`、当前选项和 redo 相关的临时上下文
+- 与画布实体持久化分离
+- 可以被重置，但不能因此破坏画布文档本身
 
-### 8.3 Local Recovery Cache
+### 8.3 本地恢复缓存
 
-- provides crash recovery and offline resilience
-- does not replace backend persistence as the source of truth
-- may use `tldraw` local persistence as an implementation aid, but not as the architecture's final persistence story
+- 提供崩溃恢复和离线兜底能力
+- 不能替代后端持久化成为最终真相来源
+- 可以利用 `tldraw` 本地持久化作为实现手段，但不能把它写成最终持久化故事
 
-## 9. Technology Guidance
+## 9. 技术建议
 
-The architecture rewrite should keep the current direction unless a change clearly improves boundary clarity.
+除非某项调整能明显改善职责边界，否则本次架构重写应维持当前总体技术方向。
 
-Recommended stack position:
+建议的技术位置如下：
 
-- keep `Next.js`, `React`, `TypeScript`, `tldraw`, `Tailwind CSS`, and PWA support
-- keep `Zustand` only for focused shared state, not as the entire architecture
-- split API logic into:
-  - transport layer
-  - domain-facing API modules such as `authApi`, `canvasApi`, and `aiApi`
+- 保留 `Next.js`、`React`、`TypeScript`、`tldraw`、`Tailwind CSS` 和 PWA 支持
+- 保留 `Zustand`，但仅用于聚焦的共享状态，不将其扩展为整个架构本身
+- API 逻辑拆为两层：
+  - 传输层
+  - 领域 API 层，例如 `authApi`、`canvasApi`、`aiApi`
 
-The document should recommend stable boundaries over premature stack replacement.
+文档应优先强调稳定边界，而不是为了“更先进”而提前换栈。
 
-## 10. Required Document Restructure
+## 10. 目标文档重构方式
 
-`docs/frontend-architecture.md` should be rewritten around product capability and domain boundaries, not around a generic technology tour.
+`docs/frontend-architecture.md` 应改写为围绕产品能力和领域边界组织的文档，而不是一份泛技术导览。
 
-Recommended section order:
+推荐章节顺序：
 
-1. overview and product goals
-2. front-end scope and non-goals
-3. core user experience principles
-4. domain boundaries
-5. canonical AI interaction flow
-6. API integration boundary
-7. rendering boundary
-8. persistence and offline strategy
-9. technology guidance
-10. phased implementation priorities
+1. 总览与产品目标
+2. 前端范围与非目标
+3. 核心体验原则
+4. 领域边界
+5. 标准 AI 交互流程
+6. API 集成边界
+7. 渲染边界
+8. 持久化与离线策略
+9. 技术建议
+10. 分阶段实现优先级
 
-The rewritten document should keep examples concise and architecture-oriented.
+重写后的示例应保持简洁，并以架构说明为主，而不是堆叠实现细节。
 
-## 11. Error Handling Expectations
+## 11. 错误处理要求
 
-The front-end architecture should define errors at the boundary level:
+前端架构文档应按边界层定义错误处理：
 
-- auth expiration handled in the auth/domain layer, not scattered across UI components
-- rate-limit and retryable AI failures surfaced as user-facing transient states
-- invalid generated payloads handled by renderer fallback, not raw runtime crashes
-- persistence failures surfaced separately from generation failures
+- 认证过期在认证领域层处理，而不是散落在各个 UI 组件中
+- 限流与可重试 AI 失败应表现为用户可理解的瞬时状态
+- 非法生成内容由渲染层兜底，而不是直接导致运行时崩溃
+- 持久化失败与生成失败必须分开表达
 
-## 12. Testing Guidance
+## 12. 测试建议
 
-The document should recommend testing at the boundary level:
+文档应推荐按边界设计测试：
 
-- unit tests for API adapters and renderer guards
-- interaction tests for the AI state flow
-- focused E2E tests for anchor -> recommend -> generate -> render
+- API 适配层与渲染守卫做单元测试
+- AI 状态流做交互测试
+- 锚点 -> 推荐 -> 生成 -> 渲染 主路径做聚焦 E2E 测试
 
-It should avoid broad, low-value examples that only restate implementation details.
+应避免大量低价值示例，只是重复实现细节。
 
-## 13. Acceptance Criteria
+## 13. 验收标准
 
-The redesign is successful when:
+本次重构成功的标准是：
 
-- `docs/frontend-architecture.md` no longer presents the front end as a generic stack overview
-- the primary AI flow matches the current backend API contract
-- rendering, persistence, and session boundaries are explicitly separated
-- the MVP's immersive and anchor-driven interaction model is visible in the document structure
-- the document remains implementable without requiring backend changes
+- `docs/frontend-architecture.md` 不再把前端写成泛技术栈总览
+- 主 AI 流程与当前后端 API 契约一致
+- 渲染、持久化、会话三类边界被明确拆分
+- MVP 的沉浸式画布与锚点驱动交互在文档结构中可见
+- 整份文档可以直接指导实现，而不要求后端改动

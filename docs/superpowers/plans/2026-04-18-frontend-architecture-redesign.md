@@ -2,24 +2,24 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Rewrite `docs/frontend-architecture.md` into a front-end architecture document that reflects the product-defining UX, clearly separates front-end boundaries, and aligns the AI interaction path with the current backend API contract.
+**Goal:** 重写 `docs/frontend-architecture.md`，使其体现产品核心体验、明确前端职责边界，并让 AI 交互路径与当前后端 API 契约保持一致。
 
-**Architecture:** The rewrite keeps the existing overall front-end direction while replacing the generic stack-tour structure with a domain-boundary structure. The document centers on five front-end domains, a canonical AI state flow, explicit rendering and persistence rules, and implementation priorities that do not require backend changes.
+**Architecture:** 本次重写保留现有前端总体方向，但将原先“技术栈导览式”结构改为“产品能力与领域边界式”结构。文档核心围绕五个前端领域、标准 AI 状态流、显式渲染与持久化规则，以及不依赖后端改动的实现优先级展开。
 
-**Tech Stack:** Markdown documentation, existing product spec in `docs/superpowers/specs/2026-04-18-frontend-architecture-design.md`, existing API reference in `docs/api-reference.md`, existing product requirements in `main.md`
+**Tech Stack:** Markdown 文档、现有规格 `docs/superpowers/specs/2026-04-18-frontend-architecture-design.md`、现有 API 参考 `docs/api-reference.md`、现有产品需求 `main.md`
 
 ---
 
-### Task 1: Restructure The Document Skeleton
+### Task 1: 重构文档骨架
 
 **Files:**
 - Modify: `docs/frontend-architecture.md`
 - Reference: `docs/superpowers/specs/2026-04-18-frontend-architecture-design.md`
 - Reference: `main.md`
 
-- [ ] **Step 1: Read the target files and confirm the new section order**
+- [ ] **Step 1: 阅读目标文件并确认新章节顺序**
 
-Read:
+阅读：
 
 ```text
 docs/frontend-architecture.md
@@ -27,7 +27,7 @@ docs/superpowers/specs/2026-04-18-frontend-architecture-design.md
 main.md
 ```
 
-Confirm the rewritten document follows this order:
+确认重写后的文档采用以下顺序：
 
 ```markdown
 ## 1. 总览与产品目标
@@ -42,9 +42,9 @@ Confirm the rewritten document follows this order:
 ## 10. 分阶段实现优先级
 ```
 
-- [ ] **Step 2: Replace the current generic introduction with a product-first overview**
+- [ ] **Step 2: 用产品优先的总览替换当前泛化导言**
 
-Write the opening sections in `docs/frontend-architecture.md` using this content shape:
+按以下内容形态重写 `docs/frontend-architecture.md` 开头部分：
 
 ```markdown
 # Cognitive Lab 前端架构设计
@@ -66,9 +66,9 @@ Cognitive Lab 前端不是一个通用白板应用，而是一个面向 iPad 和
 - 与现有后端 API 契约对齐，不要求后端额外改动
 ```
 
-- [ ] **Step 3: Replace the old broad project structure section with a boundary-oriented section**
+- [ ] **Step 3: 用边界导向章节替换旧的大而全项目结构段落**
 
-Remove or heavily shrink the old generic tree-based structure and replace it with a concise domain map like this:
+删除或大幅缩减旧的目录树式结构说明，改为下面这种简洁领域图：
 
 ```markdown
 ## 4. 前端领域边界
@@ -96,39 +96,39 @@ Remove or heavily shrink the old generic tree-based structure and replace it wit
 - 不负责发明新的后端字段
 ```
 
-- [ ] **Step 4: Verify the document no longer reads like a generic tech-stack tour**
+- [ ] **Step 4: 验证文档不再像一份泛技术栈导览**
 
-Run:
+运行：
 
 ```bash
 grep -n "^## " /Users/akuya/Desktop/Morphic/docs/frontend-architecture.md
 ```
 
-Expected:
+预期：
 
 ```text
-The section list matches the new boundary-oriented structure and no longer starts with a technology-stack-first flow.
+章节列表与新的边界导向结构一致，不再以技术栈优先的顺序展开。
 ```
 
-- [ ] **Step 5: Commit the skeleton rewrite**
+- [ ] **Step 5: 提交文档骨架重构**
 
-Run:
+运行：
 
 ```bash
 git add /Users/akuya/Desktop/Morphic/docs/frontend-architecture.md
 git commit -m "docs: restructure frontend architecture document"
 ```
 
-### Task 2: Align The AI Flow With The Current API Contract
+### Task 2: 让 AI 流程与当前 API 契约对齐
 
 **Files:**
 - Modify: `docs/frontend-architecture.md`
 - Reference: `docs/api-reference.md`
 - Reference: `docs/superpowers/specs/2026-04-18-frontend-architecture-design.md`
 
-- [ ] **Step 1: Replace all legacy single-step generation descriptions**
+- [ ] **Step 1: 替换所有旧的单步生成描述**
 
-Search for old references and rewrite them around the current API path. Replace content shaped like this:
+搜索旧引用，并按当前 API 路径改写。将下面这种内容：
 
 ```markdown
 - 调用 `/generate`
@@ -136,7 +136,7 @@ Search for old references and rewrite them around the current API path. Replace 
 - 单步生成结果并直接渲染
 ```
 
-With content shaped like this:
+替换为下面这种内容：
 
 ```markdown
 ## 5. 标准 AI 交互流程
@@ -155,9 +155,9 @@ MVP 的标准 AI 流程定义为：
 7. 渲染后的结果进入画布保存链路。
 ```
 
-- [ ] **Step 2: Add a dedicated API boundary section that mirrors the backend contract**
+- [ ] **Step 2: 增加与后端契约一致的 API 边界章节**
 
-Write this section in `docs/frontend-architecture.md`:
+将以下章节写入 `docs/frontend-architecture.md`：
 
 ```markdown
 ## 6. API 集成边界
@@ -175,9 +175,9 @@ Write this section in `docs/frontend-architecture.md`:
 - 领域 API 层：例如 `authApi`、`canvasApi`、`aiApi`
 ```
 
-- [ ] **Step 3: Remove outdated code examples that conflict with the backend contract**
+- [ ] **Step 3: 删除与后端契约冲突的过时代码示例**
 
-Delete or rewrite examples built around these outdated shapes:
+删除或改写以下过时形态的示例：
 
 ```typescript
 export function useGenerate() { ... }
@@ -185,7 +185,7 @@ await api.post('/generate', ...)
 renderAIResult(result.primary)
 ```
 
-Replace them with concise interface-level examples like this:
+替换为下面这种简洁的接口层示例：
 
 ```typescript
 const options = await aiApi.recommendOptions(canvasContext)
@@ -195,39 +195,39 @@ const content = await aiApi.generateContent({
 })
 ```
 
-- [ ] **Step 4: Verify there are no remaining primary references to `/generate` or `useGenerate`**
+- [ ] **Step 4: 验证不再保留 `/generate` 或 `useGenerate` 的主路径引用**
 
-Run:
+运行：
 
 ```bash
 grep -n "/generate\\|useGenerate" /Users/akuya/Desktop/Morphic/docs/frontend-architecture.md
 ```
 
-Expected:
+预期：
 
 ```text
-No matches, or only explicitly marked legacy/background notes.
+没有匹配结果，或只保留明确标注为历史背景的说明。
 ```
 
-- [ ] **Step 5: Commit the API alignment changes**
+- [ ] **Step 5: 提交 API 对齐修改**
 
-Run:
+运行：
 
 ```bash
 git add /Users/akuya/Desktop/Morphic/docs/frontend-architecture.md
 git commit -m "docs: align frontend architecture with agent APIs"
 ```
 
-### Task 3: Add Rendering, Persistence, And Experience Boundaries
+### Task 3: 增加体验、渲染和持久化边界
 
 **Files:**
 - Modify: `docs/frontend-architecture.md`
 - Reference: `main.md`
 - Reference: `docs/superpowers/specs/2026-04-18-frontend-architecture-design.md`
 
-- [ ] **Step 1: Add the core experience principles section**
+- [ ] **Step 1: 增加核心体验原则章节**
 
-Write this section to ensure the document reflects the product character:
+写入以下章节，确保文档体现产品气质：
 
 ```markdown
 ## 3. 核心体验原则
@@ -241,9 +241,9 @@ Write this section to ensure the document reflects the product character:
 - iPad 优先：所有关键交互都以 iPad PWA 的触控与手写体验为基线
 ```
 
-- [ ] **Step 2: Add the rendering boundary section**
+- [ ] **Step 2: 增加渲染边界章节**
 
-Write this section:
+写入以下章节：
 
 ```markdown
 ## 7. 渲染边界
@@ -262,9 +262,9 @@ Write this section:
 - 所有交互都包裹在前端受控容器中
 ```
 
-- [ ] **Step 3: Add the persistence and offline strategy section**
+- [ ] **Step 3: 增加持久化与离线策略章节**
 
-Write this section:
+写入以下章节：
 
 ```markdown
 ## 8. 持久化与离线策略
@@ -285,9 +285,9 @@ Write this section:
 - 不能取代后端成为最终真相来源
 ```
 
-- [ ] **Step 4: Add a concise technology guidance section instead of a long tool-by-tool tour**
+- [ ] **Step 4: 用简洁技术建议替代逐项技术游览**
 
-Write this section:
+写入以下章节：
 
 ```markdown
 ## 9. 技术建议
@@ -303,105 +303,105 @@ Write this section:
 本阶段的重点不是更换技术栈，而是建立清晰边界。
 ```
 
-- [ ] **Step 5: Verify the document now includes the required experience and safety sections**
+- [ ] **Step 5: 验证文档已包含所需的体验与安全边界章节**
 
-Run:
+运行：
 
 ```bash
 grep -n "核心体验原则\\|渲染边界\\|持久化与离线策略\\|技术建议" /Users/akuya/Desktop/Morphic/docs/frontend-architecture.md
 ```
 
-Expected:
+预期：
 
 ```text
-The grep output shows all four sections present in the rewritten document.
+`grep` 输出包含这四个章节，说明重写后的文档已经覆盖关键体验与安全边界。
 ```
 
-- [ ] **Step 6: Commit the boundary additions**
+- [ ] **Step 6: 提交新增边界章节**
 
-Run:
+运行：
 
 ```bash
 git add /Users/akuya/Desktop/Morphic/docs/frontend-architecture.md
 git commit -m "docs: add frontend rendering and persistence boundaries"
 ```
 
-### Task 4: Final Review And Handoff
+### Task 4: 最终复核与交接
 
 **Files:**
 - Modify: `docs/frontend-architecture.md`
 - Reference: `docs/api-reference.md`
 - Reference: `docs/superpowers/specs/2026-04-18-frontend-architecture-design.md`
 
-- [ ] **Step 1: Do a final content pass for contradictions and leftover obsolete sections**
+- [ ] **Step 1: 做最后一轮内容检查，清理冲突和遗留旧段落**
 
-Check that the final document no longer contains these mismatches:
+确认最终文档不再包含以下不匹配内容：
 
 ```text
-- single-step `/generate` as the main path
-- `useGenerate()` as the recommended integration hook
-- raw HTML embedding as the default rendering mode
-- local persistence described as the final persistence source
-- a generic long-form technology tour taking precedence over product boundaries
+- 以单步 `/generate` 作为主路径
+- 把 `useGenerate()` 作为推荐接入方式
+- 将原始 HTML 直接嵌入作为默认渲染模式
+- 将本地持久化写成最终真相来源
+- 让泛技术说明压过产品边界叙述
 ```
 
-- [ ] **Step 2: Run focused verification searches**
+- [ ] **Step 2: 运行聚焦验证搜索**
 
-Run:
+运行：
 
 ```bash
 grep -n "/generate\\|useGenerate\\|dangerouslySetInnerHTML" /Users/akuya/Desktop/Morphic/docs/frontend-architecture.md
 grep -n "recommend-options\\|generate-content\\|sessionId" /Users/akuya/Desktop/Morphic/docs/frontend-architecture.md
 ```
 
-Expected:
+预期：
 
 ```text
-The first command returns no problematic primary-pattern matches.
-The second command confirms the current API-aligned flow is documented.
+第一条命令不返回有问题的主路径模式。
+第二条命令确认当前 API 对齐流程已被写入文档。
 ```
 
-- [ ] **Step 3: Read the rewritten file top-to-bottom and tighten wording**
+- [ ] **Step 3: 从头到尾通读重写后的文档并收紧措辞**
 
-Confirm the final document:
+确认最终文档满足以下要求：
 
 ```text
-- reads as one cohesive architecture document
-- keeps examples concise
-- emphasizes product-defining UX and front-end boundaries
-- does not require backend changes
+- 作为一份完整的架构文档可以顺畅阅读
+- 示例保持简洁
+- 突出产品核心体验与前端边界
+- 不要求后端发生改动
 ```
 
-- [ ] **Step 4: Run git diff to review the final rewrite**
+- [ ] **Step 4: 运行 git diff 复核最终重写结果**
 
-Run:
+运行：
 
 ```bash
 git diff -- /Users/akuya/Desktop/Morphic/docs/frontend-architecture.md
 ```
 
-Expected:
+预期：
 
 ```text
-The diff shows a document rewrite centered on product goals, boundaries, API alignment, rendering safety, and persistence rules.
+diff 展示的是一份围绕产品目标、职责边界、API 对齐、渲染安全与持久化规则的文档重写。
 ```
 
-- [ ] **Step 5: Commit the final reviewed document**
+- [ ] **Step 5: 提交最终复核后的文档**
 
-Run:
+运行：
 
 ```bash
 git add /Users/akuya/Desktop/Morphic/docs/frontend-architecture.md
 git commit -m "docs: rewrite frontend architecture design"
 ```
 
-- [ ] **Step 6: Report completion with review links**
+- [ ] **Step 6: 交付结果并附上审阅入口**
 
-In the final handoff, include:
+最终交付说明中包含：
 
 ```markdown
-- the path to `docs/frontend-architecture.md`
-- the path to `docs/superpowers/specs/2026-04-18-frontend-architecture-design.md`
-- a short summary of what changed
-- a note that backend behavior was not modified
+- `docs/frontend-architecture.md` 的路径
+- `docs/superpowers/specs/2026-04-18-frontend-architecture-design.md` 的路径
+- 一段简短的变更总结
+- 一句说明：后端行为未被修改
 ```
