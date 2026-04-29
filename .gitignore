@@ -1,3 +1,5 @@
 .worktrees/
-
 /generated/prisma
+node_modules/
+.env
+*.db
