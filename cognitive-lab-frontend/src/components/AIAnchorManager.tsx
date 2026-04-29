@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useCanvasStore } from '../store/canvasStore';
-import { apiClient } from '../lib/api';
+import { getMockRecommendations } from '../lib/mock/ai-provider';
 import { Position } from '../types/canvas';
 
 interface AIAnchorManagerProps {
@@ -13,55 +13,63 @@ export default function AIAnchorManager({ editor }: AIAnchorManagerProps) {
   const {
     activeAnchor,
     createAnchor,
-    showPanel,
     removeAnchor,
   } = useCanvasStore();
+
+  const editorRef = useRef(editor);
+  editorRef.current = editor;
 
   useEffect(() => {
     if (!editor) return;
 
-    const handleCanvasClick = async (e: any) => {
-      if (e.button === 0 && !editor.getSelectedShapes().length) {
-        const { x, y } = e.pagePoint;
-        const position: Position = { x, y };
-        createAnchor(position);
-
-        try {
-          const context = {
-            nearbyContent: [],
-            userHistory: [],
-            currentTheme: 'minimal',
-          };
-          const recommendations = await apiClient.getRecommendations(context);
-          showPanel(recommendations);
-        } catch (error) {
-          console.error('Failed to get recommendations:', error);
-          removeAnchor();
-        }
-      }
+    // Listen for dblclick on the tldraw canvas
+    const handleDblClick = (info: { currentPagePoint: { x: number; y: number } }) => {
+      const position: Position = { x: info.currentPagePoint.x, y: info.currentPagePoint.y };
+      createAnchor(position);
     };
 
-    editor.addEventListener('click', handleCanvasClick);
-
+    editor.on('double-click', handleDblClick);
     return () => {
-      editor.removeEventListener('click', handleCanvasClick);
+      editor.off('double-click', handleDblClick);
     };
-  }, [editor, createAnchor, showPanel, removeAnchor]);
+  }, [editor, createAnchor]);
+
+  // Also create an initial anchor if none exists
+  useEffect(() => {
+    if (!activeAnchor && editor) {
+      // Place anchor at a default position
+      const defaultPos = editor.getViewportScreenCenter
+        ? editor.getViewportScreenCenter()
+        : { x: 400, y: 300 };
+      createAnchor(defaultPos);
+    }
+  }, [activeAnchor, editor, createAnchor]);
 
   if (!activeAnchor) return null;
 
   return (
     <div
-      className="absolute pointer-events-none"
+      className="absolute z-20"
       style={{
         left: activeAnchor.position.x,
         top: activeAnchor.position.y,
         transform: 'translate(-50%, -50%)',
+        pointerEvents: 'auto',
       }}
     >
-      <div className="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center text-white text-xl font-bold cursor-pointer animate-breathe pointer-events-auto hover:bg-indigo-700 transition-colors">
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          const store = useCanvasStore.getState();
+          const recs = getMockRecommendations('');
+          store.showPanel(recs);
+        }}
+        className="flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-white text-2xl font-light text-gray-700 shadow-[0_8px_24px_rgba(15,23,42,0.12)] transition hover:scale-110 hover:shadow-[0_12px_32px_rgba(15,23,42,0.18)]"
+        title="AI Assistant"
+      >
         +
-      </div>
+      </button>
     </div>
   );
 }
