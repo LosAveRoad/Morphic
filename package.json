@@ -1,12 +1,5 @@
 {
-  "dependencies": {
-    "@prisma/client": "^7.7.0",
-    "bcrypt": "^6.0.0",
-    "jsonwebtoken": "^9.0.3",
-    "prisma": "^7.7.0"
-  },
-  "devDependencies": {
-    "@types/bcrypt": "^6.0.0",
-    "@types/jsonwebtoken": "^9.0.10"
-  }
+  "name": "morphic",
+  "private": true,
+  "description": "Morphic - AI-powered infinite canvas notes"
 }
