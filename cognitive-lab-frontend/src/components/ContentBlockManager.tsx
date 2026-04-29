@@ -12,6 +12,7 @@ import ConceptCard from './blocks/ConceptCard';
 
 interface ContentBlockManagerProps {
   editor: any;
+  camera?: { x: number; y: number; z: number };
 }
 
 const renderContentByType = (block: ContentBlock, isSelected: boolean, onSelect: () => void, onDeselect: () => void, onDelete: () => void, onRegenerate: () => void, onUpdatePosition: (position: { x: number; y: number }) => void, isDragging: boolean) => {
@@ -97,7 +98,7 @@ const renderContentByType = (block: ContentBlock, isSelected: boolean, onSelect:
   }
 };
 
-export default function ContentBlockManager({ editor }: ContentBlockManagerProps) {
+export default function ContentBlockManager({ editor, camera }: ContentBlockManagerProps) {
   const {
     contentBlocks,
     selectedBlockId,
@@ -109,6 +110,8 @@ export default function ContentBlockManager({ editor }: ContentBlockManagerProps
 
   const [isDragging, setIsDragging] = useState(false);
   const [dragStartPos, setDragStartPos] = useState<Position | null>(null);
+
+  const { x: camX = 0, y: camY = 0, z: camZ = 1 } = camera ?? {};
 
   const handleBlockClick = useCallback((e: React.MouseEvent, blockId: string) => {
     e.stopPropagation();
@@ -128,8 +131,8 @@ export default function ContentBlockManager({ editor }: ContentBlockManagerProps
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (!isDragging || !dragStartPos || !selectedBlockId) return;
 
-    const deltaX = e.clientX - dragStartPos.x;
-    const deltaY = e.clientY - dragStartPos.y;
+    const deltaX = (e.clientX - dragStartPos.x) / camZ;
+    const deltaY = (e.clientY - dragStartPos.y) / camZ;
 
     const block = contentBlocks.find(b => b.id === selectedBlockId);
     if (block) {
@@ -141,7 +144,7 @@ export default function ContentBlockManager({ editor }: ContentBlockManagerProps
       updateContentBlock(selectedBlockId, { position: newPosition });
       setDragStartPos({ x: e.clientX, y: e.clientY });
     }
-  }, [isDragging, dragStartPos, selectedBlockId, contentBlocks, updateContentBlock]);
+  }, [isDragging, dragStartPos, selectedBlockId, contentBlocks, updateContentBlock, camZ]);
 
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
@@ -159,8 +162,6 @@ export default function ContentBlockManager({ editor }: ContentBlockManagerProps
   const handleRegenerateBlock = useCallback(async (e: React.MouseEvent, blockId: string) => {
     e.stopPropagation();
     try {
-      // This would call the API to regenerate content
-      // For now, just rotate to next variant
       const block = contentBlocks.find(b => b.id === blockId);
       if (block) {
         const nextVariant = (block.metadata.currentVariant + 1) % block.metadata.variants.length;
@@ -183,7 +184,6 @@ export default function ContentBlockManager({ editor }: ContentBlockManagerProps
     updateContentBlock(blockId, { position });
   }, [updateContentBlock]);
 
-  // Event listeners for drag and drop
   React.useEffect(() => {
     if (isDragging) {
       document.addEventListener('mousemove', handleMouseMove);
@@ -210,9 +210,10 @@ export default function ContentBlockManager({ editor }: ContentBlockManagerProps
               isSelected ? 'z-50 ring-2 ring-indigo-500' : 'z-40'
             } ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
             style={{
-              left: block.position.x,
-              top: block.position.y,
-              transform: isSelected ? 'scale(1.02)' : 'scale(1)',
+              left: block.position.x * camZ + camX,
+              top: block.position.y * camZ + camY,
+              transform: `scale(${camZ})`,
+              transformOrigin: 'top left',
               transition: isDragging ? 'none' : 'all 0.2s ease',
             }}
             onClick={(e) => handleBlockClick(e, block.id)}
@@ -229,8 +230,7 @@ export default function ContentBlockManager({ editor }: ContentBlockManagerProps
                 (position) => handleUpdatePosition(block.id, position),
                 isDragging
               )}
-
-              </div>
+            </div>
           </div>
         );
       })}
