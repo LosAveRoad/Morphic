@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, memo } from 'react'
 import type { CanvasCard } from '@/types/cards'
 
 export type GeneratedCardProps = {
@@ -10,7 +10,7 @@ export type GeneratedCardProps = {
   onClose: (id: string) => void
 }
 
-export function GeneratedCard({ card, onRedo, onMove, onClose }: GeneratedCardProps) {
+export const GeneratedCard = memo(function GeneratedCard({ card, onRedo, onMove, onClose }: GeneratedCardProps) {
   const [isDragging, setIsDragging] = useState(false)
 
   const body =
@@ -108,4 +108,4 @@ export function GeneratedCard({ card, onRedo, onMove, onClose }: GeneratedCardPr
       )}
     </article>
   )
-}
+})

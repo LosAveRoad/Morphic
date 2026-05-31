@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback, memo } from 'react'
 import { Tldraw, useEditor, track, type Editor } from '@tldraw/tldraw'
 import { useStore } from 'zustand'
 import { useShallow } from 'zustand/react/shallow'
@@ -16,69 +16,55 @@ import type { Recommendation } from '@/types/ai'
 
 const cardStore = createCardStore()
 
-// This inner component runs inside the Tldraw context, so we can access the editor instance
+// Only updates anchor when selection changes — no continuous pan/zoom tracking
 const AnchorTracker = track(function AnchorTracker() {
   const editor = useEditor()
   const setAnchor = useUiStore((state) => state.setAnchor)
-
-  // Use track from tldraw to reactively re-render when these values change
   const selectedShapeIds = editor.getSelectedShapeIds()
+  const selectionKey = selectedShapeIds.join(',')
 
   useEffect(() => {
     if (selectedShapeIds.length > 0) {
       const pageBounds = editor.getSelectionPageBounds()
       if (pageBounds) {
-        // Position on the right side of the bounding box, centered vertically
-        const targetPagePoint = {
+        const screenPoint = editor.pageToScreen({
           x: pageBounds.maxX + 20,
           y: pageBounds.minY + pageBounds.height / 2 - 16,
-        }
-        const screenPoint = editor.pageToScreen(targetPagePoint)
+        })
         setAnchor({ x: screenPoint.x, y: screenPoint.y })
       }
     }
-  }, [editor, selectedShapeIds, setAnchor])
-
-  // Also need to update when camera (pan/zoom) changes while something is selected
-  useEffect(() => {
-    const handleCameraChange = () => {
-      const currentSelected = editor.getSelectedShapeIds()
-      if (currentSelected.length > 0) {
-        const pageBounds = editor.getSelectionPageBounds()
-        if (pageBounds) {
-          const targetPagePoint = {
-            x: pageBounds.maxX + 20,
-            y: pageBounds.minY + pageBounds.height / 2 - 16,
-          }
-          const screenPoint = editor.pageToScreen(targetPagePoint)
-          setAnchor({ x: screenPoint.x, y: screenPoint.y })
-        }
-      }
-    }
-    
-    editor.on('change', handleCameraChange)
-    return () => {
-      editor.off('change', handleCameraChange)
-    }
-  }, [editor, setAnchor])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editor, selectionKey, setAnchor])
 
   return null
 })
 
 export function TldrawBoard() {
   const cards = useStore(cardStore, useShallow((state) => state.cards))
-  const { 
-    anchor, 
-    panelOpen, 
-    prompt, 
+  const {
+    anchor,
+    panelOpen,
+    prompt,
     generating,
     loadingRecommendations,
-    setAnchor, 
-    setPanelOpen, 
-    setPrompt, 
+    setAnchor,
+    setPanelOpen,
+    setPrompt,
     setGenerating,
-    setLoadingRecommendations 
-  } = useUiStore()
+    setLoadingRecommendations
+  } = useUiStore(useShallow((s) => ({
+    anchor: s.anchor,
+    panelOpen: s.panelOpen,
+    prompt: s.prompt,
+    generating: s.generating,
+    loadingRecommendations: s.loadingRecommendations,
+    setAnchor: s.setAnchor,
+    setPanelOpen: s.setPanelOpen,
+    setPrompt: s.setPrompt,
+    setGenerating: s.setGenerating,
+    setLoadingRecommendations: s.setLoadingRecommendations,
+  })))
   const [recommendations, setRecommendations] = useState<Recommendation[]>([])
   const selectedVariant = useRef<string>('explain')
   const visibleAnchor = anchor ?? { x: 56, y: 56 }
@@ -98,18 +84,19 @@ export function TldrawBoard() {
         getRealRecommendations(editorRef.current!, prompt)
           .then(setRecommendations)
           .finally(() => setLoadingRecommendations(false))
-      }, 500) // Debounce 500ms
+      }, 500)
       return () => clearTimeout(timer)
     }
   }, [prompt, panelOpen, setLoadingRecommendations])
 
-  const generate = async () => {
+  const generate = useCallback(async (overridePrompt?: string) => {
     if (!editorRef.current) return
-    const targetAnchor = anchor ?? visibleAnchor
+    const targetAnchor = anchor ?? { x: 56, y: 56 }
+    const finalPrompt = overridePrompt ?? prompt ?? '请解释当前想法'
     setGenerating(true)
     try {
       const result = await generateRealCardSet(editorRef.current, {
-        prompt: prompt || '请解释当前想法',
+        prompt: finalPrompt,
         x: targetAnchor.x + 40,
         y: targetAnchor.y + 40,
         initialVariant: selectedVariant.current,
@@ -120,7 +107,25 @@ export function TldrawBoard() {
     } finally {
       setGenerating(false)
     }
-  }
+  }, [anchor, prompt, setGenerating, setPanelOpen, setPrompt])
+
+  const handleRedo = useCallback((id: string) => {
+    console.log('Redo requested for card:', id)
+  }, [])
+
+  const handleMove = useCallback((id: string, x: number, y: number) => {
+    cardStore.getState().moveCard(id, x, y)
+  }, [])
+
+  const handleClose = useCallback((id: string) => {
+    cardStore.getState().removeCard(id)
+  }, [])
+
+  const handleSelect = useCallback((id: string) => {
+    selectedVariant.current = id
+    const label = id // Use the recommendation id as-is; generate will use selectedVariant
+    generate(label)
+  }, [generate])
 
   return (
     <div
@@ -138,16 +143,9 @@ export function TldrawBoard() {
       </Tldraw>
       <CardLayer
         cards={cards}
-        onRedo={(id) => {
-          const card = cards.find((item) => item.id === id)
-          if (!card) return
-          // TODO: Implement real redo logic here using generateRealCardSet
-          console.log('Redo requested for card:', card.id)
-        }}
-        onMove={(id, x, y) => {
-          cardStore.getState().moveCard(id, x, y)
-        }}
-        onClose={(id) => cardStore.getState().removeCard(id)}
+        onRedo={handleRedo}
+        onMove={handleMove}
+        onClose={handleClose}
       />
       <AIAnchor
         x={visibleAnchor.x}
@@ -166,12 +164,8 @@ export function TldrawBoard() {
             loadingRecommendations={loadingRecommendations}
             generating={generating}
             onPromptChange={setPrompt}
-            onSelect={(id) => {
-              selectedVariant.current = id
-              setPrompt(recommendations.find((item) => item.id === id)?.label ?? prompt)
-              generate()
-            }}
-            onSubmit={generate}
+            onSelect={handleSelect}
+            onSubmit={() => generate()}
           />
         </div>
       ) : null}

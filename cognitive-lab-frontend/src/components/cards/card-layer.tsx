@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react'
 import { GeneratedCard } from './generated-card'
 import type { CanvasCard } from '@/types/cards'
 
@@ -10,7 +11,7 @@ export interface CardLayerProps {
   onClose: (id: string) => void
 }
 
-export function CardLayer({ cards, onRedo, onMove, onClose }: CardLayerProps) {
+export const CardLayer = memo(function CardLayer({ cards, onRedo, onMove, onClose }: CardLayerProps) {
   return (
     <>
       {cards.map((card) => (
@@ -24,4 +25,4 @@ export function CardLayer({ cards, onRedo, onMove, onClose }: CardLayerProps) {
       ))}
     </>
   )
-}
+})
